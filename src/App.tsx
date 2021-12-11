@@ -1,38 +1,90 @@
-import * as React from "react"
+import * as React from "react";
 import {
+  Button,
+  Center,
   ChakraProvider,
-  Box,
-  Text,
-  Link,
-  VStack,
-  Code,
-  Grid,
-  theme,
-} from "@chakra-ui/react"
-import { ColorModeSwitcher } from "./ColorModeSwitcher"
-import { Logo } from "./Logo"
+  Input,
+  InputGroup,
+  InputLeftAddon,
+  Stack,
+} from "@chakra-ui/react";
+import { useSmartLightInterface } from "./hooks/useSmartLightInterface";
+import theme from "./theme";
 
-export const App = () => (
-  <ChakraProvider theme={theme}>
-    <Box textAlign="center" fontSize="xl">
-      <Grid minH="100vh" p={3}>
-        <ColorModeSwitcher justifySelf="flex-end" />
-        <VStack spacing={8}>
-          <Logo h="40vmin" pointerEvents="none" />
-          <Text>
-            Edit <Code fontSize="xl">src/App.tsx</Code> and save to reload.
-          </Text>
-          <Link
-            color="teal.500"
-            href="https://chakra-ui.com"
-            fontSize="2xl"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn Chakra
-          </Link>
-        </VStack>
-      </Grid>
-    </Box>
-  </ChakraProvider>
-)
+export const App = () => {
+  const {
+    connect,
+    toggle,
+    isConnected,
+    setRedLight,
+    setGreenLight,
+    setBlueLight,
+    setColor,
+  } = useSmartLightInterface();
+
+  const [customColor, setCustomColor] = React.useState("ffffff");
+  const [previewColor, setPreviewColor] = React.useState("ffff");
+
+  const applyCustomColor = async () => {
+    setCustomColor(await setColor(customColor));
+  };
+
+  return (
+    <ChakraProvider theme={theme}>
+      <Center height={"100vh"}>
+        <Stack>
+          {isConnected ? (
+            <Stack>
+              <Button onClick={toggle} colorScheme={"yellow"} size="lg">
+                Toggle light
+              </Button>
+              <Button onClick={setRedLight} colorScheme={"red"} size="lg">
+                Set red light
+              </Button>
+              <Button onClick={setGreenLight} colorScheme={"green"} size="lg">
+                Set green light
+              </Button>
+              <Button onClick={setBlueLight} colorScheme={"blue"} size="lg">
+                Set blue light
+              </Button>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  applyCustomColor();
+                }}
+              >
+                <Stack>
+                  <InputGroup>
+                    <InputLeftAddon children="#" />
+                    <Input
+                      value={customColor}
+                      onChange={(e) => {
+                        setCustomColor(e.target.value);
+                        setPreviewColor(
+                          "#" + (e.target.value + "000000").slice(0, 6)
+                        );
+                      }}
+                      placeholder="Custom color (e.g. #ff00ff)"
+                    />
+                  </InputGroup>
+                  <Button
+                    backgroundColor={previewColor}
+                    dropShadow={"0px 0px 4px #cccccc"}
+                    size="lg"
+                    type="submit"
+                  >
+                    Set custom color light
+                  </Button>
+                </Stack>
+              </form>
+            </Stack>
+          ) : (
+            <Button onClick={connect} colorScheme="pink" size="lg">
+              Connect
+            </Button>
+          )}
+        </Stack>
+      </Center>
+    </ChakraProvider>
+  );
+};
